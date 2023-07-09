@@ -1,23 +1,21 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class TableDisplayPanel extends JPanel {
     private DefaultTableModel tableModel;
 
-    public TableDisplayPanel(ArrayList<Object[]> tableData) {
+    public TableDisplayPanel(ArrayList<Object[]> tableData, Map<String, Integer> columnMap) {
         setLayout(new BorderLayout());
 
-        // Create the table with two columns
+        // Create the table model with the correct number of columns
         String[] columnNames = {"Subject", "GPA"};
-
-        // Create a DefaultTableModel to hold the data
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Disable editing of table cells
+                return false;
             }
         };
 
@@ -39,24 +37,30 @@ public class TableDisplayPanel extends JPanel {
         // Create a scroll pane and add the table to it
         JScrollPane scrollPane = new JScrollPane(table);
 
-        // Create or update the average GPA label
-        double totalGPA = 0.0;
-        for (int row = 0; row < tableModel.getRowCount(); row++) {
-            double gpa = (double) tableModel.getValueAt(row, 1);
-            totalGPA += gpa;
-        }
-        double averageGPA = totalGPA / tableModel.getRowCount();
-
-        // Format the average GPA to two decimal places
-        DecimalFormat decimalFormat = new DecimalFormat("#.##");
-        String formattedAverageGPA = decimalFormat.format(averageGPA);
-
         // Create the average GPA label
-        JLabel averageGPALabel = new JLabel("Average GPA: " + formattedAverageGPA);
+        JLabel averageGPALabel = createAverageGPALabel(tableModel);
         averageGPALabel.setFont(tableFont);
 
         // Add the scroll pane and average GPA label to this panel
         add(scrollPane, BorderLayout.CENTER);
         add(averageGPALabel, BorderLayout.SOUTH);
+    }
+
+    private JLabel createAverageGPALabel(DefaultTableModel tableModel) {
+        double totalGPA = 0.0;
+        for (int row = 0; row < tableModel.getRowCount(); row++) {
+            String gpaString = (String) tableModel.getValueAt(row, 1);
+            double gpa = Double.parseDouble(gpaString);
+            totalGPA += gpa;
+        }
+        double averageGPA = totalGPA / tableModel.getRowCount();
+
+        // Format the average GPA to two decimal places
+        String formattedAverageGPA = String.format("%.2f", averageGPA);
+
+        // Create the average GPA label
+        JLabel averageGPALabel = new JLabel("Average GPA: " + formattedAverageGPA);
+
+        return averageGPALabel;
     }
 }
