@@ -100,7 +100,7 @@ public class SymbolNumberInputPanel extends JPanel {
         if (tableDisplayPanel != null) {
             frame.getContentPane().remove(tableDisplayPanel);
         }
-        tableDisplayPanel = new TableDisplayPanel(gpaData);
+        tableDisplayPanel = new TableDisplayPanel(gpaData, null);
         frame.getContentPane().removeAll();
         frame.getContentPane().add(tableDisplayPanel);
         frame.revalidate();
