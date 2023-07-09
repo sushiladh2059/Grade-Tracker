@@ -7,13 +7,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SymbolNumberInputPanel extends JPanel {
     private JTextField symbolNumberField;
     private JFrame frame;
     private TableDisplayPanel tableDisplayPanel;
-    private Map<String, Integer> columnMap;
+    private Map<String, List<Double>> studentData;
 
     public SymbolNumberInputPanel(JFrame frame) {
         this.frame = frame;
@@ -37,9 +38,9 @@ public class SymbolNumberInputPanel extends JPanel {
                 // Perform any desired action with the submitted symbol number
                 System.out.println("Submitted Symbol Number: " + symbolNumber);
                 // Update the table data and show the table
-                ArrayList<Object[]> updatedData = getUpdatedTableData(symbolNumber);
-                if (updatedData != null) {
-                    showTable(updatedData);
+                List<Double> gpaData = studentData.get(symbolNumber);
+                if (gpaData != null) {
+                    showTable(gpaData);
                 } else {
                     JOptionPane.showMessageDialog(null, "Symbol Number not found.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -58,59 +59,48 @@ public class SymbolNumberInputPanel extends JPanel {
         add(inputPanel, BorderLayout.NORTH);
         add(titleLabel, BorderLayout.CENTER);
 
-        // Initialize column map
-        columnMap = initializeColumnMap();
+        // Initialize student data
+        studentData = readStudentData();
     }
 
-    private Map<String, Integer> initializeColumnMap() {
-        Map<String, Integer> map = new HashMap<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("studentdata.csv"))) {
-            String headerLine = reader.readLine();
-            if (headerLine != null) {
-                String[] headers = headerLine.split(",");
-                for (int i = 1; i < headers.length; i++) {
-                    map.put(headers[i], i);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return map;
-    }
+    private Map<String, List<Double>> readStudentData() {
+        Map<String, List<Double>> studentData = new HashMap<>();
 
-    private ArrayList<Object[]> getUpdatedTableData(String symbolNumber) {
-        ArrayList<Object[]> updatedData = new ArrayList<>();
-
-        // Read the CSV file and retrieve the data for the specified symbol number
         try (BufferedReader reader = new BufferedReader(new FileReader("studentdata.csv"))) {
             String line;
-            boolean found = false;
+            boolean isHeader = true;
             while ((line = reader.readLine()) != null) {
-                String[] values = line.split(",");
-                if (values[0].equals(symbolNumber)) {
-                    found = true;
-                    Object[] rowData = new Object[columnMap.size()];
-                    for (int i = 1; i < values.length; i++) {
-                        rowData[i - 1] = values[i];
-                    }
-                    updatedData.add(rowData);
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
                 }
-            }
-            if (!found) {
-                return null;
+                String[] values = line.split(",");
+                String symbolNumber = values[0];
+                List<Double> gpaData = new ArrayList<>();
+                for (int i = 1; i < values.length; i++) {
+                    String gpaStr = values[i];
+                    double gpa;
+                    if (gpaStr.equalsIgnoreCase("F")) {
+                        gpa = -1.0; // Use -1.0 to represent "F" grade
+                    } else {
+                        gpa = Double.parseDouble(gpaStr);
+                    }
+                    gpaData.add(gpa);
+                }
+                studentData.put(symbolNumber, gpaData);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return updatedData;
+        return studentData;
     }
 
-    private void showTable(ArrayList<Object[]> updatedData) {
+    private void showTable(List<Double> gpaData) {
         if (tableDisplayPanel != null) {
             frame.getContentPane().remove(tableDisplayPanel);
         }
-        tableDisplayPanel = new TableDisplayPanel(updatedData, columnMap);
+        tableDisplayPanel = new TableDisplayPanel(gpaData);
         frame.getContentPane().removeAll();
         frame.getContentPane().add(tableDisplayPanel);
         frame.revalidate();
