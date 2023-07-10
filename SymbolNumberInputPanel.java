@@ -5,6 +5,8 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,11 +15,15 @@ public class SymbolNumberInputPanel extends JPanel {
     private JPanel parentPanel;
     private JTextField symbolNumberField;
     private Map<Integer, Double[]> symbolDataMap;
+    private String serverIP;
+    private int serverPort;
 
-    public SymbolNumberInputPanel(JFrame frame, JPanel parentPanel) {
+    public SymbolNumberInputPanel(JFrame frame, JPanel parentPanel, String serverIP, int serverPort) {
         this.frame = frame;
         this.parentPanel = parentPanel;
         this.symbolDataMap = readStudentData("studentdata.csv");
+        this.serverIP = serverIP;
+        this.serverPort = serverPort;
         createInputPanel();
     }
 
@@ -43,7 +49,11 @@ public class SymbolNumberInputPanel extends JPanel {
                     // Check if the symbol number exists in the data map
                     if (symbolDataMap.containsKey(symbolNumber)) {
                         Double[] gpaData = symbolDataMap.get(symbolNumber);
-                        // Create an instance of TableDisplayPanel with the GPA data
+
+                        // Send the GPA data to the server
+                        sendGPADataToServer(gpaData);
+
+                        // Create an instance of TableDisplayPanel
                         TableDisplayPanel tableDisplayPanel = new TableDisplayPanel(gpaData, parentPanel);
 
                         // Add the table display panel to the parent panel
@@ -110,5 +120,16 @@ public class SymbolNumberInputPanel extends JPanel {
         }
 
         return symbolDataMap;
+    }
+
+    private void sendGPADataToServer(Double[] gpaData) {
+        try (Socket socket = new Socket(serverIP, serverPort)) {
+            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+            for (Double gpa : gpaData) {
+                writer.println(gpa);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
