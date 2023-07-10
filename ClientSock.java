@@ -2,7 +2,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class Client {
+public class ClientSock {
     private static final String SERVER_IP = "localhost";
     private static final int SERVER_PORT = 8888;
 

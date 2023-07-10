@@ -17,48 +17,53 @@ public class SymbolNumberInputPanel extends JPanel {
     private Map<Integer, Double[]> symbolDataMap;
     private String serverIP;
     private int serverPort;
+    private JPanel contentPane;
+    private JPanel backgroundImagePanel;
 
-    public SymbolNumberInputPanel(JFrame frame, JPanel parentPanel, String serverIP, int serverPort) {
+    public SymbolNumberInputPanel(JFrame frame, JPanel parentPanel, String serverIP, int serverPort, JPanel contentPane) {
         this.frame = frame;
         this.parentPanel = parentPanel;
         this.symbolDataMap = readStudentData("studentdata.csv");
         this.serverIP = serverIP;
         this.serverPort = serverPort;
+        this.contentPane = contentPane;
         createInputPanel();
     }
 
     private void createInputPanel() {
         setLayout(new BorderLayout());
-
+    
         // Create the symbol number label and text field
         JLabel symbolNumberLabel = new JLabel("Enter Symbol Number:");
         symbolNumberField = new JTextField(10);
-
+    
         // Create the submit button
         JButton submitButton = new JButton("Submit");
+    
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 // Get the entered symbol number
                 String symbolNumberText = symbolNumberField.getText();
-
+    
                 // Check if the symbol number is valid
                 if (isValidSymbolNumber(symbolNumberText)) {
                     int symbolNumber = Integer.parseInt(symbolNumberText);
-
+    
                     // Check if the symbol number exists in the data map
                     if (symbolDataMap.containsKey(symbolNumber)) {
                         Double[] gpaData = symbolDataMap.get(symbolNumber);
-
+    
                         // Send the GPA data to the server
                         sendGPADataToServer(gpaData);
-
+    
                         // Create an instance of TableDisplayPanel
                         TableDisplayPanel tableDisplayPanel = new TableDisplayPanel(gpaData, parentPanel);
-
+    
                         // Add the table display panel to the parent panel
                         parentPanel.add(tableDisplayPanel, "tableDisplayPanel");
-
+    
                         // Switch to the table display panel
                         CardLayout cardLayout = (CardLayout) parentPanel.getLayout();
                         cardLayout.show(parentPanel, "tableDisplayPanel");
@@ -72,16 +77,29 @@ public class SymbolNumberInputPanel extends JPanel {
                 }
             }
         });
-
+        
+    // Create an image icon component and resize the image
+        ImageIcon imageIcon = new ImageIcon("me.jpg");
+        Image image = imageIcon.getImage();
+        int width = 330; // Adjust the width as needed
+        int height = 220; // Adjust the height as needed
+        Image resizedImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        imageIcon = new ImageIcon(resizedImage);
+        JLabel imageLabel = new JLabel(imageIcon);
+        
         // Create a panel for the input components
-        JPanel inputPanel = new JPanel();
-        inputPanel.add(symbolNumberLabel);
-        inputPanel.add(symbolNumberField);
-        inputPanel.add(submitButton);
-
+        JPanel inputPanel = new JPanel(new BorderLayout());
+        inputPanel.add(symbolNumberLabel, BorderLayout.WEST);
+        inputPanel.add(symbolNumberField, BorderLayout.CENTER);
+        inputPanel.add(submitButton, BorderLayout.EAST);
+        inputPanel.add(imageLabel, BorderLayout.SOUTH);
+    
         // Add the input panel to the center of the panel
         add(inputPanel, BorderLayout.CENTER);
     }
+    
+    
+    
 
     private boolean isValidSymbolNumber(String symbolNumberText) {
         try {
