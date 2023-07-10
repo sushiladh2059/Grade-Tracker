@@ -5,105 +5,110 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class SymbolNumberInputPanel extends JPanel {
-    private JTextField symbolNumberField;
     private JFrame frame;
-    private TableDisplayPanel tableDisplayPanel;
-    private Map<String, List<Double>> studentData;
+    private JPanel parentPanel;
+    private JTextField symbolNumberField;
+    private Map<Integer, Double[]> symbolDataMap;
 
-    public SymbolNumberInputPanel(JFrame frame) {
+    public SymbolNumberInputPanel(JFrame frame, JPanel parentPanel) {
         this.frame = frame;
+        this.parentPanel = parentPanel;
+        this.symbolDataMap = readStudentData("studentdata.csv");
+        createInputPanel();
+    }
+
+    private void createInputPanel() {
         setLayout(new BorderLayout());
 
-        // Set the font for the title
-        Font titleFont = new Font("Arial", Font.BOLD, 20);
-
-        // Create the title label and set its font
-        JLabel titleLabel = new JLabel("Student Grade Tracker");
-        titleLabel.setFont(titleFont);
-
-        // Create the text field for symbol number input
+        // Create the symbol number label and text field
+        JLabel symbolNumberLabel = new JLabel("Enter Symbol Number:");
         symbolNumberField = new JTextField(10);
 
-        // Create the button to submit symbol number
-        JButton enterButton = new JButton("Enter");
-        enterButton.addActionListener(new ActionListener() {
+        // Create the submit button
+        JButton submitButton = new JButton("Submit");
+        submitButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                String symbolNumber = symbolNumberField.getText();
-                // Perform any desired action with the submitted symbol number
-                System.out.println("Submitted Symbol Number: " + symbolNumber);
-                // Update the table data and show the table
-                List<Double> gpaData = studentData.get(symbolNumber);
-                if (gpaData != null) {
-                    showTable(gpaData);
+                // Get the entered symbol number
+                String symbolNumberText = symbolNumberField.getText();
+
+                // Check if the symbol number is valid
+                if (isValidSymbolNumber(symbolNumberText)) {
+                    int symbolNumber = Integer.parseInt(symbolNumberText);
+
+                    // Check if the symbol number exists in the data map
+                    if (symbolDataMap.containsKey(symbolNumber)) {
+                        Double[] gpaData = symbolDataMap.get(symbolNumber);
+                        // Create an instance of TableDisplayPanel with the GPA data
+                        TableDisplayPanel tableDisplayPanel = new TableDisplayPanel(gpaData, parentPanel);
+
+                        // Add the table display panel to the parent panel
+                        parentPanel.add(tableDisplayPanel, "tableDisplayPanel");
+
+                        // Switch to the table display panel
+                        CardLayout cardLayout = (CardLayout) parentPanel.getLayout();
+                        cardLayout.show(parentPanel, "tableDisplayPanel");
+                    } else {
+                        // Show an error message for invalid symbol number
+                        JOptionPane.showMessageDialog(frame, "Symbol Number not found!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 } else {
-                    JOptionPane.showMessageDialog(null, "Symbol Number not found.", "Error", JOptionPane.ERROR_MESSAGE);
+                    // Show an error message for invalid symbol number
+                    JOptionPane.showMessageDialog(frame, "Invalid Symbol Number!", "Error", JOptionPane.ERROR_MESSAGE);
                 }
-                symbolNumberField.setText("");
-                symbolNumberField.requestFocus();
             }
         });
 
-        // Create a JPanel for the symbol number input components
+        // Create a panel for the input components
         JPanel inputPanel = new JPanel();
-        inputPanel.add(new JLabel("Symbol Number: "));
+        inputPanel.add(symbolNumberLabel);
         inputPanel.add(symbolNumberField);
-        inputPanel.add(enterButton);
+        inputPanel.add(submitButton);
 
-        // Add the input panel and title label to this panel
-        add(inputPanel, BorderLayout.NORTH);
-        add(titleLabel, BorderLayout.CENTER);
-
-        // Initialize student data
-        studentData = readStudentData();
+        // Add the input panel to the center of the panel
+        add(inputPanel, BorderLayout.CENTER);
     }
 
-    private Map<String, List<Double>> readStudentData() {
-        Map<String, List<Double>> studentData = new HashMap<>();
+    private boolean isValidSymbolNumber(String symbolNumberText) {
+        try {
+            int symbolNumber = Integer.parseInt(symbolNumberText);
+            return symbolNumber > 0; // Validate against your specific criteria
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader("studentdata.csv"))) {
+    private Map<Integer, Double[]> readStudentData(String fileName) {
+        Map<Integer, Double[]> symbolDataMap = new HashMap<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line;
-            boolean isHeader = true;
+            boolean isFirstLine = true;
+
             while ((line = reader.readLine()) != null) {
-                if (isHeader) {
-                    isHeader = false;
+                if (isFirstLine) {
+                    isFirstLine = false;
                     continue;
                 }
-                String[] values = line.split(",");
-                String symbolNumber = values[0];
-                List<Double> gpaData = new ArrayList<>();
-                for (int i = 1; i < values.length; i++) {
-                    String gpaStr = values[i];
-                    double gpa;
-                    if (gpaStr.equalsIgnoreCase("F")) {
-                        gpa = -1.0; // Use -1.0 to represent "F" grade
-                    } else {
-                        gpa = Double.parseDouble(gpaStr);
-                    }
-                    gpaData.add(gpa);
+
+                String[] data = line.split(",");
+                int symbolNumber = Integer.parseInt(data[0]);
+                Double[] gpaData = new Double[data.length - 1];
+
+                for (int i = 1; i < data.length; i++) {
+                    gpaData[i - 1] = Double.parseDouble(data[i]);
                 }
-                studentData.put(symbolNumber, gpaData);
+
+                symbolDataMap.put(symbolNumber, gpaData);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return studentData;
-    }
-
-    private void showTable(List<Double> gpaData) {
-        if (tableDisplayPanel != null) {
-            frame.getContentPane().remove(tableDisplayPanel);
-        }
-        tableDisplayPanel = new TableDisplayPanel(gpaData, null);
-        frame.getContentPane().removeAll();
-        frame.getContentPane().add(tableDisplayPanel);
-        frame.revalidate();
-        frame.repaint();
+        return symbolDataMap;
     }
 }

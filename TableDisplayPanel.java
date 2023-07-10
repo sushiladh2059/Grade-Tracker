@@ -2,36 +2,33 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 public class TableDisplayPanel extends JPanel {
     private JPanel parentPanel;
 
-    public TableDisplayPanel(List<Double> gpaData, JPanel parentPanel) {
+    public TableDisplayPanel(Double[] gpaData, JPanel parentPanel) {
         this.parentPanel = parentPanel;
         createTablePanel(gpaData);
     }
 
-    private void createTablePanel(List<Double> gpaData) {
+    private void createTablePanel(Double[] gpaData) {
         setLayout(new BorderLayout());
 
         // Create the table model
-        DefaultTableModel tableModel = new DefaultTableModel(new Object[] { "Subject", "GPA" }, 0);
+        DefaultTableModel tableModel = new DefaultTableModel(new Object[]{"Subject", "GPA"}, 0);
 
         // Add the data rows to the table model
-        tableModel.addRow(new Object[] { "Maths", gpaData.get(0) });
-        tableModel.addRow(new Object[] { "English", gpaData.get(1) });
-        tableModel.addRow(new Object[] { "Web", gpaData.get(2) });
-        tableModel.addRow(new Object[] { "Logic", gpaData.get(3) });
+        tableModel.addRow(new Object[]{"Maths", formatGrade(gpaData[0])});
+        tableModel.addRow(new Object[]{"English", formatGrade(gpaData[1])});
+        tableModel.addRow(new Object[]{"Web", formatGrade(gpaData[2])});
+        tableModel.addRow(new Object[]{"Logic", formatGrade(gpaData[3])});
 
         // Calculate the average GPA
         double averageGPA = calculateAverageGPA(gpaData);
-        String averageGrade = getGradeString(averageGPA);
 
         // Add the average GPA row to the table model
-        tableModel.addRow(new Object[] { "Average GPA", averageGrade });
+        tableModel.addRow(new Object[]{"Average GPA", formatGrade(averageGPA)});
 
         // Create the table
         JTable table = new JTable(tableModel);
@@ -51,14 +48,10 @@ public class TableDisplayPanel extends JPanel {
 
         // Create the back button
         JButton backButton = new JButton("BACK");
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Switch to the parent panel (initial input panel)
-                CardLayout cardLayout = (CardLayout) getParent().getLayout();
-                cardLayout.show(getParent(), "inputPanel");
-
-            }
+        backButton.addActionListener(e -> {
+            // Switch to the parent panel (initial input panel)
+            CardLayout cardLayout = (CardLayout) parentPanel.getLayout();
+            cardLayout.show(parentPanel, "inputPanel");
         });
 
         // Create a panel for the back button
@@ -69,22 +62,30 @@ public class TableDisplayPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    private double calculateAverageGPA(List<Double> gpaData) {
+    private double calculateAverageGPA(Double[] gpaData) {
         double sum = 0.0;
         int count = 0;
+        boolean hasZeroGPA = false;
 
-        for (double gpa : gpaData) {
-            if (gpa < 0.0 || gpa > 4.0) {
+        for (Double gpa : gpaData) {
+            if (gpa == null || gpa < 0.0 || gpa > 4.0 || gpa.isNaN()) {
                 continue; // Skip invalid GPAs
             }
             sum += gpa;
             count++;
+            if (gpa == 0.0) {
+                hasZeroGPA = true;
+            }
         }
 
-        return count > 0 ? sum / count : 0.0; // Return the average GPA
+        if (hasZeroGPA) {
+            return 0.0;
+        } else {
+            return count > 0 ? sum / count : 0.0;
+        }
     }
 
-    private String getGradeString(double gpa) {
+    private String formatGrade(double gpa) {
         if (gpa >= 3.85) {
             return "A";
         } else if (gpa >= 3.5) {
