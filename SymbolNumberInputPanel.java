@@ -79,7 +79,7 @@ public class SymbolNumberInputPanel extends JPanel {
         });
         
     // Create an image icon component and resize the image
-        ImageIcon imageIcon = new ImageIcon("me.jpg");
+        ImageIcon imageIcon = new ImageIcon("Welcome.jpg");
         Image image = imageIcon.getImage();
         int width = 330; // Adjust the width as needed
         int height = 220; // Adjust the height as needed

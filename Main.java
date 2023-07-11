@@ -18,7 +18,7 @@ public class Main {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 // Load the image
-                ImageIcon backgroundImage = new ImageIcon("me.jpg");
+                ImageIcon backgroundImage = new ImageIcon("Welcome.jpg");
 
                 // Draw the image on the panel only if the current panel is the input panel
                 if (getParent().getComponent(0) == this) {

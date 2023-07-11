@@ -51,10 +51,4 @@ public class ClientSock {
             System.out.println("Subject " + (i + 1) + ": " + gpaData[i]);
         }
     }
-
-    public void setSymbolNumber(int symbolNumber) {
-    }
-
-    public void start() {
-    }
 }
